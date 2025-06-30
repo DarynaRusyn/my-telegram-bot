@@ -1,4 +1,5 @@
-﻿from telegram import Update
+﻿import os
+from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -6,7 +7,15 @@ from telegram.ext import (
 )
 from deep_translator import GoogleTranslator
 
-BOT_TOKEN = '7619972145:AAGo6bGzkS5dkyPYd_Qw2xQ20RoqsH4gz20'
+# Отримуємо токен з середовища
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+
+# Якщо токен не вказано — програма зупиниться з помилкою
+import os
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+
+if not BOT_TOKEN:
+    raise ValueError("❌ Не знайдено токен бота! Додай змінну BOT_TOKEN у Railway.")
 
 async def translate_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Перевіряємо, чи команда /translate є відповіддю на якесь повідомлення
@@ -30,8 +39,6 @@ async def translate_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(BOT_TOKEN).build()
-
-    # Додаємо обробник команди /translate
     app.add_handler(CommandHandler("translate", translate_reply))
 
     print("✅ Бот запущено. Очікую команду /translate у відповідь на повідомлення...")
