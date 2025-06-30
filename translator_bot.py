@@ -14,6 +14,9 @@ if not BOT_TOKEN:
     raise ValueError("❌ Не знайдено токен бота! Додай змінну BOT_TOKEN у Railway.")
 
 async def translate_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Друкуємо аргументи в консоль для налагодження
+    print("Отримані аргументи:", context.args)
+
     # Перевірка, чи команда є відповіддю на повідомлення
     if not update.message or not update.message.reply_to_message:
         await update.message.reply_text(
@@ -31,8 +34,9 @@ async def translate_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     args = context.args
     target_lang = 'uk'
     if args:
-        if args[0].lower() in ['uk', 'en', 'es']:
-            target_lang = args[0].lower()
+        lang = args[0].lower()
+        if lang in ['uk', 'en', 'es']:
+            target_lang = lang
         else:
             await update.message.reply_text("⚠️ Невідома мова. Використовуйте одну з: uk, en, es.")
             return
@@ -44,7 +48,8 @@ async def translate_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"📥 *Переклад {lang_names[target_lang]}*:\n{translated}",
             parse_mode='Markdown'
         )
-    except Exception:
+    except Exception as e:
+        print("Помилка при перекладі:", e)
         await update.message.reply_text("⚠️ Сталася помилка під час перекладу.")
 
 if __name__ == '__main__':
