@@ -1,4 +1,5 @@
-﻿from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+﻿import os
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
     MessageHandler,
@@ -7,15 +8,18 @@ from telegram.ext import (
     filters
 )
 from deep_translator import GoogleTranslator
-import os
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 if not BOT_TOKEN:
-    raise ValueError("❌ Не знайдено токен бота!")
+    raise ValueError("❌ Bot token not found! Please set BOT_TOKEN in the environment.")
 
-LANG_NAMES = {'uk': 'українською', 'en': 'англійською', 'es': 'іспанською'}
+LANG_NAMES = {
+    'uk': 'Ukrainian',
+    'en': 'English',
+    'es': 'Spanish'
+}
 
-# Автоматично реагує на будь-яке повідомлення-відповідь
+# Automatically reacts to any reply with translation buttons
 async def auto_translate_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.message
     if not message or not message.reply_to_message:
@@ -29,16 +33,16 @@ async def auto_translate_prompt(update: Update, context: ContextTypes.DEFAULT_TY
 
     keyboard = [
         [
-            InlineKeyboardButton("🇺🇦 Українська", callback_data='lang_uk'),
-            InlineKeyboardButton("🇬🇧 Англійська", callback_data='lang_en'),
-            InlineKeyboardButton("🇪🇸 Іспанська", callback_data='lang_es'),
+            InlineKeyboardButton("🇺🇦 Ukrainian", callback_data='lang_uk'),
+            InlineKeyboardButton("🇬🇧 English", callback_data='lang_en'),
+            InlineKeyboardButton("🇪🇸 Spanish", callback_data='lang_es'),
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await message.reply_text("🔠 Обери мову для перекладу:", reply_markup=reply_markup)
+    await message.reply_text("🌐 Choose a language to translate into:", reply_markup=reply_markup)
 
-# Обробка кнопок
+# Handles button clicks
 async def handle_language_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -47,28 +51,25 @@ async def handle_language_choice(update: Update, context: ContextTypes.DEFAULT_T
     original_text = context.user_data.get("text_to_translate")
 
     if not original_text:
-        await query.edit_message_text("⚠️ Немає тексту для перекладу.")
+        await query.edit_message_text("⚠️ No text found to translate.")
         return
 
     try:
         translated = GoogleTranslator(source='auto', target=lang_code).translate(original_text)
         await query.edit_message_text(
-            f"📥 *Переклад {LANG_NAMES[lang_code]}*:\n{translated}",
+            f"📥 *Translated into {LANG_NAMES[lang_code]}*:\n{translated}",
             parse_mode='Markdown'
         )
     except Exception as e:
-        print("Помилка:", e)
-        await query.edit_message_text("⚠️ Сталася помилка під час перекладу.")
+        print("Translation error:", e)
+        await query.edit_message_text("⚠️ An error occurred during translation.")
 
-# Запуск
+# Run the bot
 if __name__ == '__main__':
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # Коли є відповідь на повідомлення — автоматично пропонує переклад
     app.add_handler(MessageHandler(filters.REPLY & filters.TEXT, auto_translate_prompt))
-
-    # Обробка натискань на кнопки
     app.add_handler(CallbackQueryHandler(handle_language_choice, pattern=r'^lang_'))
 
-    print("✅ Бот запущено. Відповідай на повідомлення — і отримаєш кнопки для перекладу.")
+    print("✅ Bot is running. Reply to any message to get translation options.")
     app.run_polling()
