@@ -15,11 +15,10 @@ if not BOT_TOKEN:
 
 # Основна команда для перекладу
 async def translate_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Перевірка: чи це відповідь на повідомлення
     if not update.message or not update.message.reply_to_message:
         await update.message.reply_text(
             "🔁 Напиши /translate <мова> у *відповідь* на повідомлення, яке потрібно перекласти.\n"
-            "Доступні мови: `uk` (українська), `en` (англійська), `es` (іспанська)",
+            "Доступні мови: `uk` (українська), `en` (англійська), `es` (іспанська), `mg` (малагасійська)",
             parse_mode='Markdown'
         )
         return
@@ -29,21 +28,27 @@ async def translate_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⚠️ Не знайдено текст для перекладу.")
         return
 
-    # Отримуємо мову перекладу (за замовчуванням – 'uk')
     args = context.args
     target_lang = 'uk'
+    allowed_langs = {
+        'uk': 'українською',
+        'en': 'англійською',
+        'es': 'іспанською',
+        'mg': 'малагасійською'
+    }
+
     if args:
-        if args[0].lower() in ['uk', 'en', 'es']:
-            target_lang = args[0].lower()
+        selected_lang = args[0].lower()
+        if selected_lang in allowed_langs:
+            target_lang = selected_lang
         else:
-            await update.message.reply_text("⚠️ Невідома мова. Обери: uk, en, es.")
+            await update.message.reply_text("⚠️ Невідома мова. Обери: uk, en, es, mg.")
             return
 
     try:
         translated = GoogleTranslator(source='auto', target=target_lang).translate(original_text)
-        lang_names = {'uk': 'українською', 'en': 'англійською', 'es': 'іспанською'}
         await update.message.reply_text(
-            f"📥 *Переклад {lang_names[target_lang]}*:\n{translated}",
+            f"📥 *Переклад {allowed_langs[target_lang]}*:\n{translated}",
             parse_mode='Markdown'
         )
     except Exception as e:
