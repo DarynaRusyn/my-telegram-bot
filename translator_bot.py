@@ -10,7 +10,7 @@ from telegram.ext import (
 from deep_translator import GoogleTranslator
 
 # 🔐 Insert your token here
-BOT_TOKEN = "your_bot_token_here"
+BOT_TOKEN = "7619972145:AAGo6bGzkS5dkyPYd_Qw2xQ20RoqsH4gz20"
 if not BOT_TOKEN:
     raise ValueError("❌ Bot token not found! Please set BOT_TOKEN.")
 
