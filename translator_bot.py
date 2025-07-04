@@ -18,12 +18,11 @@ LANG_NAMES = {
     'mg': 'Malagasy'
 }
 
-async def translate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def translate(update: Update, context: ContextTypes.DEFAULT_TYPE, target_lang: str):
     message = update.message
     if not message or not message.reply_to_message:
         await message.reply_text(
-            "🔁 Please reply to a message with /translate <language_code>.\n"
-            "Available languages: uk, en, es, mg"
+            f"🔁 Please reply to a message with /{target_lang} to translate."
         )
         return
 
@@ -31,16 +30,6 @@ async def translate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not original_text:
         await message.reply_text("⚠️ No text found to translate.")
         return
-
-    args = context.args
-    if not args or args[0].lower() not in LANG_NAMES:
-        await message.reply_text(
-            "⚠️ Unknown or missing language code.\n"
-            "Please use one of: uk, en, es, mg"
-        )
-        return
-
-    target_lang = args[0].lower()
 
     try:
         translated = GoogleTranslator(source='auto', target=target_lang).translate(original_text)
@@ -55,7 +44,9 @@ async def translate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == '__main__':
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler("translate", translate_command))
+    # Додаємо командні хендлери для кожної мови
+    for lang_code in LANG_NAMES.keys():
+        app.add_handler(CommandHandler(lang_code, lambda u, c, lc=lang_code: translate(u, c, lc)))
 
-    print("✅ Bot is running. Use /translate <language_code> in reply to a message.")
+    print("✅ Bot is running. Use /uk, /en, /es, or /mg in reply to a message.")
     app.run_polling()
